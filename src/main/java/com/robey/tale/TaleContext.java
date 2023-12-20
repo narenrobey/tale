@@ -5,6 +5,7 @@ import java.io.File;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.DefaultParser;
+import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 
@@ -35,9 +36,20 @@ public class TaleContext {
 
 		CommandLineParser parser = new DefaultParser();
 	    try {
-			CommandLine cmd = parser.parse(createOptions(), args);
+            Options options = createOptions();
+			CommandLine cmd = parser.parse(options, args);
+
+            if(cmd.hasOption("h")) {
+                printHelp(options, "");
+                return null;
+            }
 
 			Boolean forever = cmd.hasOption("f");
+            
+            if(cmd.getArgs().length != 1){
+                printHelp(options, "Must specify a file to tail.");
+                return null;
+            }
 			String filename = cmd.getArgs()[0];
 
             int bytesToSkip = 0;
@@ -62,7 +74,13 @@ public class TaleContext {
 		options.addOption("f", null, false, "tail forever");
 		options.addOption("c", "bytes", true, "begin taleing at the specified byte count");
         options.addOption("b", "blocks", true, "begin taleing at the specified block count. each block is 512 bytes");
+        options.addOption("h", "help", false, "print this help message");
 
 		return options;
 	}
+
+    private static void printHelp(Options options, String header) {
+        HelpFormatter formatter = new HelpFormatter();
+        formatter.printHelp("tale", header, options, "", true);
+    }
 }
