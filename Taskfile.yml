@@ -1,0 +1,13 @@
+version: '3'
+
+tasks:
+  build:
+    cmds:
+      - ./gradlew fatJar
+    desc: Build a fat JAR with Gradle
+
+  run:
+    cmds:
+      - java -jar build/libs/tale-0.0.1-SNAPSHOT.jar -f test.txt
+    desc: Run the built JAR file with test.txt as input
+    deps: ["build"]

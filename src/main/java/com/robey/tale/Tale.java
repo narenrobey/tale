@@ -2,47 +2,64 @@ package com.robey.tale;
 
 import org.apache.commons.cli.ParseException;
 
-import java.io.BufferedReader;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.FileReader;
 import java.io.IOException;
-import java.util.List;
-
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.DefaultParser;
 import org.apache.commons.cli.Options;
 
 class Tale {
-
-	
-
+	private static final int BUFFER_SIZE = 512;
+	private static final int SLEEP_DURATION = 500;
 
 	public static void main(final String[] args) {
-		System.out.println("Hello world");
 
 		TaleContext ctx = getAppContextFromCLIArgs(args);
 		if(ctx == null){
 			System.exit(1);
 			return;
 		}
-		
+
 		//read from the file
-		try (FileReader fileStream = new FileReader(ctx.file);
-		     BufferedReader bufferedReader = new BufferedReader(fileStream)
-			) {
+		byte[] buffer = new byte[BUFFER_SIZE];
+
+		try (FileInputStream fileStream = new FileInputStream(ctx.file)) {
 			
-			String thisLine = bufferedReader.readLine();
-			while(thisLine != null) {
+			int numRead = fileStream.read(buffer);
 
-				System.out.println(thisLine);
+			if(!ctx.isForever()){
+				while(numRead != -1) {
 
-				thisLine = bufferedReader.readLine();
+					System.out.print(new String( buffer, 0, numRead));
+
+					numRead = fileStream.read(buffer);
+				}
+			}
+			else{
+				// we're reading forever, so block while numRead is -1
+				while(true) {
+					if(numRead == -1){
+						try {
+							Thread.sleep(SLEEP_DURATION);
+
+						} catch (InterruptedException e) {
+							// interrupted, so exit
+							System.out.println("Interrupted, exiting");
+							break;
+						}
+					}
+					else {
+						System.out.print(new String( buffer, 0, numRead));
+					}
+					numRead = fileStream.read(buffer);
+				}
+
+				System.out.println(new String( buffer, 0, numRead));
 			}
 		}
 		catch(IOException ex) {
-			System.err.println( "Error;" + ex.getMessage());
+			System.err.println( "Error: " + ex.getMessage());
 		}
 
 		System.exit(0);
@@ -72,6 +89,4 @@ class Tale {
 
 		return options;
 	}
-
-
 }
