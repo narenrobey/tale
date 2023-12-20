@@ -1,13 +1,7 @@
 package com.robey.tale;
 
-import org.apache.commons.cli.ParseException;
-
 import java.io.FileInputStream;
 import java.io.IOException;
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.CommandLineParser;
-import org.apache.commons.cli.DefaultParser;
-import org.apache.commons.cli.Options;
 
 class Tale {
 	private static final int BUFFER_SIZE = 512;
@@ -15,7 +9,7 @@ class Tale {
 
 	public static void main(final String[] args) {
 
-		TaleContext ctx = getAppContextFromCLIArgs(args);
+		TaleContext ctx = TaleContext.getAppContextFromCLIArgs(args);
 		if(ctx == null){
 			System.exit(1);
 			return;
@@ -26,6 +20,11 @@ class Tale {
 
 		try (FileInputStream fileStream = new FileInputStream(ctx.file)) {
 			
+			final int bytesToSkip = ctx.bytesToSkip();
+			if(bytesToSkip > 0){
+				fileStream.skip(bytesToSkip);
+			}
+
 			int numRead = fileStream.read(buffer);
 
 			if(!ctx.isForever()){
@@ -65,28 +64,4 @@ class Tale {
 		System.exit(0);
 	}
 
-	private static TaleContext getAppContextFromCLIArgs(String[] args) {
-
-		CommandLineParser parser = new DefaultParser();
-	    try {
-			CommandLine cmd = parser.parse(createOptions(), args);
-
-			Boolean forever = cmd.hasOption("f");
-			String filename = cmd.getArgs()[0];
-
-			return new TaleContext(filename, forever);
-		}
-		catch(final ParseException e) {
-			System.out.println("Cannot parse arguments: " + e.getMessage());
-			return null;
-		}
-	}
-
-	private static Options createOptions(){
-
-		Options options = new Options();
-		options.addOption("f", null, false, "tail forever");
-
-		return options;
-	}
 }
